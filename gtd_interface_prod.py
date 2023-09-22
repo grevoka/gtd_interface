@@ -13,6 +13,9 @@ import re
 import uuid  # 1. Importer la bibliothèque uuid
 
 
+# Variable globale pour stocker l'ID de la tâche actuellement sélectionnée
+selected_task_id = None
+
 
 class PriorityLevel(Enum):
     LOW = 'Low'
@@ -272,9 +275,16 @@ def make_url_clickable(text_widget, url, start_idx, end_idx, tag_name):
 
 
 def save_changes(task, desc_text):
+    global selected_task_id
     updated_description = desc_text.get("1.0", tk.END).strip()
-    task['description'] = updated_description
-    print("Description mise à jour dans le dictionnaire de tâches.")  # Debug
+    
+    # Trouver et mettre à jour la tâche correcte en utilisant l'ID
+    for category, tasks in manager.tasks.items():
+        for task in tasks:
+            if task['id'] == selected_task_id:
+                task['description'] = updated_description
+                print("Description mise à jour dans le dictionnaire de tâches.")  # Debug
+                break
 
     try:
         with open('tasks.json', 'w') as f:
@@ -284,6 +294,8 @@ def save_changes(task, desc_text):
         print(f"Échec de la sauvegarde dans tasks.json: {e}")  # Debug
 
 def show_task_details(event):
+    global selected_task_id  # Déclarer la variable comme globale pour la modifier
+    
     current_tree = event.widget
     selected_item = current_tree.selection()
     
@@ -296,6 +308,8 @@ def show_task_details(event):
     for category, tasks in manager.tasks.items():
         for task in tasks:
             if task['name'] == task_name and task['created_date'] == created_date:
+                selected_task_id = task['id']  # Mettre à jour l'ID de la tâche sélectionnée
+                
                 details_window = tk.Toplevel()
                 details_window.title("Task Details")
                 
